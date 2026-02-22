@@ -8,7 +8,8 @@ import 'package:todo_app/features/todo/presentation/bloc/todo_state.dart';
 class TodoBloc extends Bloc<TodoEvent,TodoState>{
   TodoBloc(): super(const TodoInitial()){
     on<AddTodo>(_addTodo);
-
+    on<DeleteTodo>(_deleteTodo);
+    on<ToggleTodoStatus>(_toggleTodoStatus);
   }
   FutureOr<void>_addTodo(AddTodo event, Emitter<TodoState> emit) {
     List<TodoModel> oldTodos = [];
@@ -26,5 +27,23 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     );
     final newTodos=[...oldTodos,newTodo];
     emit(TodoLoaded(todos: newTodos));
+  }
+
+  FutureOr<void> _deleteTodo(DeleteTodo event, Emitter<TodoState> emit){
+    List<TodoModel> oldTodos=[];
+    if(state is TodoLoaded){
+      oldTodos=(state as TodoLoaded).todos;
+    }
+    final newTodos=oldTodos.where((todo)=> todo.id!=event.id).toList();
+    emit(TodoLoaded(todos: newTodos));
+  }
+
+  FutureOr<void>_toggleTodoStatus(ToggleTodoStatus event, Emitter<TodoState> emit){
+    List<TodoModel> oldTodos=[];
+    if(state is TodoLoaded){
+      oldTodos=(state as TodoLoaded).todos;
+      final newTodos=oldTodos.map((todo)=> todo.id==event.id ? todo.copyWith(isComplete: !todo.isComplete) : todo).toList();
+      emit(TodoLoaded(todos: newTodos));
+    }
   }
 }
