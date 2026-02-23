@@ -20,7 +20,13 @@ class TodoScreen extends StatelessWidget {
               if(state is TodoLoaded){
                 final todos=state.todos;
                 if(todos.isNotEmpty){
-                  return ListView.builder(itemBuilder: )
+                  return ListView.builder(
+                      itemCount: state.todos.length,
+                      itemBuilder: (context,state){
+                        final todo=state.todos[index];
+
+                      }
+                  )
                 }
               }
             }),
