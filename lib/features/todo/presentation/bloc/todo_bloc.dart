@@ -17,10 +17,13 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
 
     _loadTodos();
   }
-  FutureOr<void>_addTodo(AddTodo event, Emitter<TodoState> emit) {
+  Future<void>_addTodo(AddTodo event, Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos = [];
     if (state is TodoLoaded) {
       oldTodos = (state as TodoLoaded).todos;
+    }
+    else if(state is TodoDeleted){
+      oldTodos=(state as TodoDeleted).todos;
     }
     final newTodo = TodoModel(
       id: DateTime
@@ -32,25 +35,42 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
       isComplete: false,
     );
     final newTodos=[...oldTodos,newTodo];
+    await _localDataSource.saveTodos(newTodos);
     emit(TodoLoaded(todos: newTodos));
   }
 
-  FutureOr<void> _deleteTodo(DeleteTodo event, Emitter<TodoState> emit){
+  Future<void> _deleteTodo(DeleteTodo event, Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos=[];
     if(state is TodoLoaded){
       oldTodos=(state as TodoLoaded).todos;
     }
+    else if(state is TodoDeleted){
+      oldTodos=(state as TodoDeleted).todos;
+    }
+
+    final deletedTodo=oldTodos.firstWhere((todo)=>todo.id==event.id);
     final newTodos=oldTodos.where((todo)=> todo.id!=event.id).toList();
-    emit(TodoLoaded(todos: newTodos));
+
+    await _localDataSource.saveTodos(newTodos);
+
+
+    emit(TodoDeleted(deletedTodo: deletedTodo, todos: newTodos));
   }
 
-  FutureOr<void>_toggleTodoStatus(ToggleTodoStatus event, Emitter<TodoState> emit){
-    List<TodoModel> oldTodos=[];
-    if(state is TodoLoaded){
-      oldTodos=(state as TodoLoaded).todos;
-      final newTodos=oldTodos.map((todo)=> todo.id==event.id ? todo.copyWith(isComplete: !todo.isComplete) : todo).toList();
-      emit(TodoLoaded(todos: newTodos));
+  Future<void> _toggleTodoStatus(ToggleTodoStatus event,Emitter<TodoState> emit) async {
+    List<TodoModel> oldTodos = [];
+
+    if (state is TodoLoaded) {
+      oldTodos = (state as TodoLoaded).todos;
+    } else if (state is TodoDeleted) {
+      oldTodos = (state as TodoDeleted).todos;
     }
+
+    final newTodos = oldTodos.map((todo) => todo.id == event.id ? todo.copyWith(isComplete: !todo.isComplete) : todo).toList();
+
+    await _localDataSource.saveTodos(newTodos);
+
+    emit(TodoLoaded(todos: newTodos));
   }
 
   Future<void> _loadTodos() async {

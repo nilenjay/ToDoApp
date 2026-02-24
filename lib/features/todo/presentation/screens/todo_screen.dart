@@ -6,6 +6,7 @@ import 'package:todo_app/features/todo/presentation/bloc/todo_event.dart';
 import 'package:todo_app/features/todo/presentation/bloc/todo_state.dart';
 
 import '../../data/datasources/todo_local_datasource.dart';
+import '../../data/models/todo_model.dart';
 
 
 class TodoScreen extends StatelessWidget {
@@ -20,44 +21,76 @@ class TodoScreen extends StatelessWidget {
             appBar: AppBar(
               title: const Text('My Todo List'),
             ),
-            body: BlocBuilder<TodoBloc,TodoState>(
-                builder: (context,state){
-                  if(state is TodoLoaded){
-                    final todos=state.todos;
-                    if(todos.isNotEmpty){
-                      return ListView.builder(
-                          itemCount: todos.length,
-                          itemBuilder: (context,index){
-                            final todo= todos[index];
-                            return Card(
-                              child: ListTile(
-                                leading: Checkbox(value: todo.isComplete, onChanged: (_){
-                                  context.read<TodoBloc>().add(ToggleTodoStatus(id: todo.id));
-                                }),
-                                title: Text(todo.description),
-                                trailing: IconButton(
-                                    onPressed: (){
-                                      context.read<TodoBloc>().add(DeleteTodo(id: todo.id));
-                                    },
-                                    icon: const Icon(Icons.delete)),
-                              ),
+            body: BlocConsumer<TodoBloc, TodoState>(
+          listener: (context, state) {
+            if (state is TodoDeleted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Todo deleted'),
+                  action: SnackBarAction(
+                    label: 'UNDO',
+                    onPressed: () {
+                      // undo will come next
+                    },
+                  ),
+                ),
+              );
+            }
+          },
+              builder: (context, state) {
+                List<TodoModel> todos = [];
 
-                            );
-                          }
+                if (state is TodoLoaded) {
+                  todos = state.todos;
+                } else if (state is TodoDeleted) {
+                  todos = state.todos;
+                }
+
+                if (todos.isNotEmpty) {
+                  return ListView.builder(
+                    itemCount: todos.length,
+                    itemBuilder: (context, index) {
+                      final todo = todos[index];
+
+                      return Card(
+                        child: ListTile(
+                          leading: Checkbox(
+                            value: todo.isComplete,
+                            onChanged: (_) {
+                              context.read<TodoBloc>().add(
+                                ToggleTodoStatus(id: todo.id),
+                              );
+                            },
+                          ),
+                          title: Text(
+                            todo.description,
+                            style: TextStyle(
+                              color:
+                              todo.isComplete ? Colors.grey : Colors.black,
+                              decoration: todo.isComplete
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            onPressed: () {
+                              context.read<TodoBloc>().add(
+                                DeleteTodo(id: todo.id),
+                              );
+                            },
+                            icon: const Icon(Icons.delete),
+                          ),
+                        ),
                       );
-                    }
-                    else{
-                      return const Center(
-                        child: Text('No List, Start the Journey now!!'),
-                      );
-                    }
-                  }
-                  else{
-                    return const Center(
-                      child: Text('No List yet, Start the Journey now!!'),
-                    );
-                  }
-                }),
+                    },
+                  );
+                }
+
+                return const Center(
+                  child: Text('No List yet, Start the Journey now!!'),
+                );
+              },
+          ),
             floatingActionButton: FloatingActionButton(onPressed: (){
               final controller =TextEditingController();
               showDialog(context: context, builder: (dialogContext){

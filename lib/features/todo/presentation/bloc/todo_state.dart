@@ -22,3 +22,15 @@ class TodoLoaded extends TodoState{
   // TODO: implement props
   List<Object?> get props => [todos];
 }
+
+class TodoDeleted extends TodoState{
+  final TodoModel deletedTodo;
+  final List<TodoModel> todos;
+  const TodoDeleted({
+    required this.deletedTodo,
+    required this.todos,
+  });
+  @override
+  // TODO: implement props
+  List<Object?> get props => [deletedTodo,todos];
+}
