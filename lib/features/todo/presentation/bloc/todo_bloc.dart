@@ -1,15 +1,21 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:todo_app/features/todo/data/datasources/todo_local_datasource.dart';
 import 'package:todo_app/features/todo/data/models/todo_model.dart';
 import 'package:todo_app/features/todo/presentation/bloc/todo_event.dart';
 import 'package:todo_app/features/todo/presentation/bloc/todo_state.dart';
 
 class TodoBloc extends Bloc<TodoEvent,TodoState>{
-  TodoBloc(): super(const TodoInitial()){
+
+  final TodoLocalDataSource _localDataSource;
+
+  TodoBloc(this._localDataSource): super(const TodoInitial()){
     on<AddTodo>(_addTodo);
     on<DeleteTodo>(_deleteTodo);
     on<ToggleTodoStatus>(_toggleTodoStatus);
+
+    _loadTodos();
   }
   FutureOr<void>_addTodo(AddTodo event, Emitter<TodoState> emit) {
     List<TodoModel> oldTodos = [];
@@ -45,5 +51,10 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
       final newTodos=oldTodos.map((todo)=> todo.id==event.id ? todo.copyWith(isComplete: !todo.isComplete) : todo).toList();
       emit(TodoLoaded(todos: newTodos));
     }
+  }
+
+  Future<void> _loadTodos() async {
+    final todos = await _localDataSource.loadTodos();
+    emit(TodoLoaded(todos: todos));
   }
 }

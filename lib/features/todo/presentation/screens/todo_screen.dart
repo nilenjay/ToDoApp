@@ -5,13 +5,15 @@ import 'package:todo_app/features/todo/presentation/bloc/todo_bloc.dart';
 import 'package:todo_app/features/todo/presentation/bloc/todo_event.dart';
 import 'package:todo_app/features/todo/presentation/bloc/todo_state.dart';
 
+import '../../data/datasources/todo_local_datasource.dart';
+
 
 class TodoScreen extends StatelessWidget {
   const TodoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (_)=> TodoBloc(),
+    return BlocProvider(create: (_)=> TodoBloc(TodoLocalDataSource()),
       child: Builder(
         builder: (context) {
           return Scaffold(
