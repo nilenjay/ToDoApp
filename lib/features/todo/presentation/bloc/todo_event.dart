@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:todo_app/features/todo/data/models/todo_model.dart';
 
+import '../../data/models/todo_filter.dart';
+
 abstract class TodoEvent extends Equatable{
   const TodoEvent();
   @override
@@ -45,4 +47,13 @@ class RestoreTodo extends TodoEvent{
   @override
   // TODO: implement props
   List<Object?> get props => [todo];
+}
+
+class ChangeFilter extends TodoEvent {
+  final TodoFilter filter;
+
+  const ChangeFilter({required this.filter});
+
+  @override
+  List<Object?> get props => [filter];
 }

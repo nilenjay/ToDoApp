@@ -6,6 +6,8 @@ import 'package:todo_app/features/todo/data/models/todo_model.dart';
 import 'package:todo_app/features/todo/presentation/bloc/todo_event.dart';
 import 'package:todo_app/features/todo/presentation/bloc/todo_state.dart';
 
+import '../../data/models/todo_filter.dart';
+
 class TodoBloc extends Bloc<TodoEvent,TodoState>{
 
   final TodoLocalDataSource _localDataSource;
@@ -15,9 +17,10 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     on<DeleteTodo>(_deleteTodo);
     on<ToggleTodoStatus>(_toggleTodoStatus);
     on<RestoreTodo>(_restoreTodo);
-
+    on<ChangeFilter>(_changeFilter);
     _loadTodos();
   }
+
   Future<void>_addTodo(AddTodo event, Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos = [];
     if (state is TodoLoaded) {
@@ -79,9 +82,7 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     emit(TodoLoaded(todos: todos));
   }
 
-  Future<void> _restoreTodo(RestoreTodo event,
-      Emitter<TodoState> emit,
-      ) async {
+  Future<void> _restoreTodo(RestoreTodo event,Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos = [];
 
     if (state is TodoLoaded) {
@@ -95,5 +96,18 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     await _localDataSource.saveTodos(newTodos);
 
     emit(TodoLoaded(todos: newTodos));
+  }
+
+  Future<void> _changeFilter(ChangeFilter event,Emitter<TodoState> emit) async {
+    List<TodoModel> oldTodos = [];
+    TodoFilter currentFilter = event.filter;
+
+    if (state is TodoLoaded) {
+      oldTodos = (state as TodoLoaded).todos;
+    } else if (state is TodoDeleted) {
+      oldTodos = (state as TodoDeleted).todos;
+    }
+
+    emit(TodoLoaded(todos: oldTodos,filter: currentFilter,));
   }
 }
