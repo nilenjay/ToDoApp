@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:todo_app/features/todo/data/models/todo_model.dart';
 
 abstract class TodoEvent extends Equatable{
   const TodoEvent();
@@ -35,4 +36,13 @@ class ToggleTodoStatus extends TodoEvent{
   @override
   // TODO: implement props
   List<Object?> get props => [id];
+}
+
+class RestoreTodo extends TodoEvent{
+  final TodoModel todo;
+
+  const RestoreTodo({required this.todo});
+  @override
+  // TODO: implement props
+  List<Object?> get props => [todo];
 }

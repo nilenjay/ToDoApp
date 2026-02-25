@@ -14,6 +14,7 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     on<AddTodo>(_addTodo);
     on<DeleteTodo>(_deleteTodo);
     on<ToggleTodoStatus>(_toggleTodoStatus);
+    on<RestoreTodo>(_restoreTodo);
 
     _loadTodos();
   }
@@ -76,5 +77,23 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
   Future<void> _loadTodos() async {
     final todos = await _localDataSource.loadTodos();
     emit(TodoLoaded(todos: todos));
+  }
+
+  Future<void> _restoreTodo(RestoreTodo event,
+      Emitter<TodoState> emit,
+      ) async {
+    List<TodoModel> oldTodos = [];
+
+    if (state is TodoLoaded) {
+      oldTodos = (state as TodoLoaded).todos;
+    } else if (state is TodoDeleted) {
+      oldTodos = (state as TodoDeleted).todos;
+    }
+
+    final newTodos = [...oldTodos, event.todo];
+
+    await _localDataSource.saveTodos(newTodos);
+
+    emit(TodoLoaded(todos: newTodos));
   }
 }

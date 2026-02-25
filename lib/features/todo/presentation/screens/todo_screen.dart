@@ -30,7 +30,7 @@ class TodoScreen extends StatelessWidget {
                   action: SnackBarAction(
                     label: 'UNDO',
                     onPressed: () {
-                      // undo will come next
+                      context.read<TodoBloc>().add(RestoreTodo(todo: state.deletedTodo));
                     },
                   ),
                 ),
