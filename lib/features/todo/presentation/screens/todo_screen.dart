@@ -50,6 +50,7 @@ class TodoScreen extends StatelessWidget {
                 if (state is TodoLoaded) {
                   todos = state.todos;
                   currentFilter = state.filter;
+
                 } else if (state is TodoDeleted) {
                   todos = state.todos;
                   currentFilter = state.filter;
@@ -70,9 +71,45 @@ class TodoScreen extends StatelessWidget {
                     filteredTodos = todos;
                     break;
                 }
+                String searchQuery = '';
+
+                if (state is TodoLoaded) {
+                  searchQuery = state.searchQuery;
+                } else if (state is TodoDeleted) {
+                  searchQuery = state.searchQuery;
+                }
+
+                if (searchQuery.isNotEmpty) {
+                  filteredTodos = filteredTodos
+                      .where((t) => t.description
+                      .toLowerCase()
+                      .contains(searchQuery.toLowerCase()))
+                      .toList();
+                }
+
+
 
                 return Column(
                   children: [
+
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      child: TextField(
+                        onChanged: (value) {
+                          context.read<TodoBloc>().add(
+                            SearchTodos(query: value),
+                          );
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search todos...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Row(
@@ -132,6 +169,7 @@ class TodoScreen extends StatelessWidget {
                                 DeleteTodo(id: todo.id),
                               );
                             },
+
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 6),

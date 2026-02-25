@@ -16,27 +16,31 @@ class TodoInitial extends TodoState{
 class TodoLoaded extends TodoState{
   final List<TodoModel> todos;
   final TodoFilter filter;
+  final String searchQuery;
 
   const TodoLoaded({
     required this.todos,
     this.filter=TodoFilter.all,
+    this.searchQuery='',
 });
   @override
   // TODO: implement props
-  List<Object?> get props => [todos,filter];
+  List<Object?> get props => [todos,filter,searchQuery];
 }
 
 class TodoDeleted extends TodoState{
   final TodoModel deletedTodo;
   final List<TodoModel> todos;
+  final String searchQuery;
   final TodoFilter filter;
 
   const TodoDeleted({
     required this.deletedTodo,
     required this.todos,
     this.filter=TodoFilter.all,
+    this.searchQuery='',
   });
   @override
   // TODO: implement props
-  List<Object?> get props => [deletedTodo,todos,filter];
+  List<Object?> get props => [deletedTodo,todos,filter,searchQuery];
 }

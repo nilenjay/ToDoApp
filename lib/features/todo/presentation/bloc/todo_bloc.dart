@@ -19,6 +19,7 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     on<RestoreTodo>(_restoreTodo);
     on<ChangeFilter>(_changeFilter);
     _loadTodos();
+    on<SearchTodos>(_searchTodos);
   }
 
   Future<void>_addTodo(AddTodo event, Emitter<TodoState> emit) async {
@@ -109,5 +110,20 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     }
 
     emit(TodoLoaded(todos: oldTodos,filter: currentFilter,));
+  }
+
+  Future<void> _searchTodos(SearchTodos event,Emitter<TodoState> emit) async {
+    List<TodoModel> oldTodos = [];
+    TodoFilter currentFilter = TodoFilter.all;
+
+    if (state is TodoLoaded) {
+      oldTodos = (state as TodoLoaded).todos;
+      currentFilter = (state as TodoLoaded).filter;
+    } else if (state is TodoDeleted) {
+      oldTodos = (state as TodoDeleted).todos;
+      currentFilter = (state as TodoDeleted).filter;
+    }
+
+    emit(TodoLoaded(todos: oldTodos,filter: currentFilter,searchQuery: event.query));
   }
 }

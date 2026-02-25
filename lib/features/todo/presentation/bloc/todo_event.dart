@@ -57,3 +57,13 @@ class ChangeFilter extends TodoEvent {
   @override
   List<Object?> get props => [filter];
 }
+
+class SearchTodos extends TodoEvent{
+  final String query;
+  const SearchTodos({
+    required this.query,
+});
+  @override
+  // TODO: implement props
+  List<Object?> get props => [query];
+}
