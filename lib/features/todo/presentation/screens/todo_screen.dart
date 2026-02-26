@@ -40,6 +40,7 @@ class TodoScreen extends StatelessWidget {
                 }
               },
               builder: (context, state) {
+
                 List<TodoModel> todos = [];
                 TodoFilter currentFilter = TodoFilter.all;
                 List<TodoModel> filteredTodos = todos;
@@ -83,8 +84,6 @@ class TodoScreen extends StatelessWidget {
                       .contains(searchQuery.toLowerCase()))
                       .toList();
                 }
-
-
 
                 return Column(
                   children: [
@@ -144,11 +143,14 @@ class TodoScreen extends StatelessWidget {
                     ),
 
                     Expanded(
-                      child: todos.isNotEmpty
+                      child: filteredTodos.isNotEmpty
                           ? ListView.builder(
                         itemCount: filteredTodos.length,
                         itemBuilder: (context, index) {
                           final todo = filteredTodos[index];
+                          final isOverdue = todo.dueDate != null &&
+                              todo.dueDate!.isBefore(DateTime.now()) &&
+                              !todo.isComplete;
 
                           return Dismissible(
                             key: ValueKey(todo.id),
@@ -167,9 +169,11 @@ class TodoScreen extends StatelessWidget {
                               );
                             },
 
+
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 6),
+
                               child: Card(
                                 elevation: 2,
                                 child: ListTile(
@@ -184,6 +188,7 @@ class TodoScreen extends StatelessWidget {
                                   ),
                                   title: Text(
                                     todo.description,
+
                                     style: TextStyle(
                                       color: todo.isComplete
                                           ? Colors.grey
@@ -193,6 +198,14 @@ class TodoScreen extends StatelessWidget {
                                           : TextDecoration.none,
                                     ),
                                   ),
+                                  subtitle: todo.dueDate != null
+                                      ? Text(
+                                    'Due: ${todo.dueDate!.toLocal().toString().split(' ')[0]}',
+                                    style: TextStyle(
+                                      color: isOverdue ? Colors.red : Colors.grey,
+                                    ),
+                                  )
+                                      : null,
                                   trailing: IconButton(
                                     onPressed: () {
                                       context.read<TodoBloc>().add(
