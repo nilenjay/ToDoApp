@@ -38,6 +38,7 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
       description: event.description,
       addedDate: DateTime.now(),
       isComplete: false,
+      dueDate: event.dueDate,
     );
     final newTodos=[...oldTodos,newTodo];
     await _localDataSource.saveTodos(newTodos);

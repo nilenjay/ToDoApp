@@ -15,10 +15,7 @@ class TodoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (_)=> TodoBloc(TodoLocalDataSource()),
-      child: Builder(
-        builder: (context) {
-          return Scaffold(
+    return Scaffold(
             appBar: AppBar(
               title: const Text('My Todo List'),
             ),
@@ -226,96 +223,94 @@ class TodoScreen extends StatelessWidget {
                 );
               },
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                final controller = TextEditingController();
-                DateTime? selectedDueDate;
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {
+                  final controller = TextEditingController();
+                  DateTime? selectedDueDate;
 
-                showDialog(
-                  context: context,
-                  builder: (dialogContext) {
-                    return StatefulBuilder(
-                      builder: (context, setState) {
-                        return AlertDialog(
-                          title: const Text('Add Todo'),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              TextField(
-                                controller: controller,
-                                decoration: const InputDecoration(
-                                  hintText: 'Enter description',
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) {
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          return AlertDialog(
+                            title: const Text('Add Todo'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextField(
+                                  controller: controller,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Enter description',
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 12),
+                                const SizedBox(height: 12),
 
-                              // 🔥 Pick date button
-                              OutlinedButton.icon(
-                                icon: const Icon(Icons.calendar_today),
-                                label: const Text('Pick Due Date (optional)'),
-                                onPressed: () async {
-                                  final picked = await showDatePicker(
-                                    context: dialogContext,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime.now()
-                                        .subtract(const Duration(days: 3650)),
-                                    lastDate: DateTime.now()
-                                        .add(const Duration(days: 3650)),
-                                  );
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.calendar_today),
+                                  label: const Text('Pick Due Date (optional)'),
+                                  onPressed: () async {
+                                    final picked = await showDatePicker(
+                                      context: dialogContext,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime.now()
+                                          .subtract(const Duration(days: 3650)),
+                                      lastDate: DateTime.now()
+                                          .add(const Duration(days: 3650)),
+                                    );
 
-                                  if (picked != null) {
-                                    setState(() {
-                                      selectedDueDate = picked;
-                                    });
-                                  }
-                                },
-                              ),
-
-                              // 🔥 Show selected date
-                              if (selectedDueDate != null) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Due: ${selectedDueDate!.toLocal().toString().split(' ')[0]}',
-                                  style: const TextStyle(color: Colors.grey),
+                                    if (picked != null) {
+                                      setState(() {
+                                        selectedDueDate = picked;
+                                      });
+                                    }
+                                  },
                                 ),
+
+                                if (selectedDueDate != null) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Due: ${selectedDueDate!.toLocal().toString().split(' ')[0]}',
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ],
                               ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  final text = controller.text.trim();
+
+                                  if (text.isNotEmpty) {
+                                    dialogContext.read<TodoBloc>().add(
+                                      AddTodo(
+                                        description: text,
+                                        dueDate: selectedDueDate,
+                                      ),
+                                    );
+                                  }
+
+                                  Navigator.pop(dialogContext);
+                                },
+                                child: const Text('Add'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogContext),
+                                child: const Text('Cancel'),
+                              ),
                             ],
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                final text = controller.text.trim();
-
-                                if (text.isNotEmpty) {
-                                  context.read<TodoBloc>().add(
-                                    AddTodo(
-                                      description: text,
-                                      dueDate: selectedDueDate,
-                                    ),
-                                  );
-                                }
-
-                                Navigator.pop(dialogContext);
-                              },
-                              child: const Text('Add'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(dialogContext),
-                              child: const Text('Cancel'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-              child: const Icon(Icons.add),
-            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+                child: const Icon(Icons.add),
+              ),
 
           );
         }
-      ),
-    );
+
+
   }
-}
+
