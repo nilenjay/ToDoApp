@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:todo_app/core/notifications/notification_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:todo_app/features/todo/data/datasources/todo_local_datasource.dart';
 import 'package:todo_app/features/todo/data/models/todo_model.dart';
@@ -42,6 +42,7 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     );
     final newTodos=[...oldTodos,newTodo];
     await _localDataSource.saveTodos(newTodos);
+    await _scheduleReminder(newTodo);
     emit(TodoLoaded(todos: newTodos));
   }
 
@@ -58,8 +59,8 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     final newTodos=oldTodos.where((todo)=> todo.id!=event.id).toList();
 
     await _localDataSource.saveTodos(newTodos);
-
-
+    await NotificationService.instance
+        .cancelNotification(event.id.hashCode);
     emit(TodoDeleted(deletedTodo: deletedTodo, todos: newTodos));
   }
 
@@ -75,7 +76,8 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     final newTodos = oldTodos.map((todo) => todo.id == event.id ? todo.copyWith(isComplete: !todo.isComplete) : todo).toList();
 
     await _localDataSource.saveTodos(newTodos);
-
+    await NotificationService.instance
+        .cancelNotification(event.id.hashCode);
     emit(TodoLoaded(todos: newTodos));
   }
 
@@ -126,5 +128,32 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     }
 
     emit(TodoLoaded(todos: oldTodos,filter: currentFilter,searchQuery: event.query));
+  }
+
+  Future<void> _scheduleReminder(TodoModel todo) async {
+    DateTime? scheduledTime;
+
+    // 🧠 custom reminder wins
+    if (todo.reminderTime != null) {
+      scheduledTime = todo.reminderTime;
+    }
+    // 🧠 otherwise default = dueDate - 30 minutes
+    else if (todo.dueDate != null) {
+      scheduledTime =
+          todo.dueDate!.subtract(const Duration(minutes: 30));
+    }
+
+    // 🚫 nothing to schedule
+    if (scheduledTime == null) return;
+
+    // 🚫 don't schedule past notifications
+    if (scheduledTime.isBefore(DateTime.now())) return;
+
+    await NotificationService.instance.scheduleNotification(
+      id: todo.id.hashCode,
+      title: 'Todo Reminder',
+      body: todo.description,
+      scheduledTime: scheduledTime,
+    );
   }
 }

@@ -22,12 +22,16 @@ class TodoModel extends Equatable{
   @HiveField(4)
   final DateTime ? dueDate;
 
+  @HiveField(5)
+  final DateTime? reminderTime;
+
   const TodoModel({
     required this.id,
     required this.description,
     this.isComplete=false,
     required this.addedDate,
     this.dueDate,
+    this.reminderTime,
 });
 
   TodoModel copyWith({
@@ -36,6 +40,7 @@ class TodoModel extends Equatable{
     bool? isComplete,
     DateTime? addedDate,
     Object? dueDate = _noValue,
+    Object? reminderTime = _noValue,
   }) {
     return TodoModel(
       id: id ?? this.id,
@@ -45,10 +50,13 @@ class TodoModel extends Equatable{
       dueDate: identical(dueDate, _noValue)
           ? this.dueDate
           : dueDate as DateTime?,
+      reminderTime: identical(reminderTime, _noValue)
+          ? this.reminderTime
+          : reminderTime as DateTime?,
     );
   }
 
   @override
   // TODO: implement props
-  List<Object?> get props => [id,addedDate,isComplete,description,dueDate];
+  List<Object?> get props => [id,addedDate,isComplete,description,dueDate,reminderTime];
 }
