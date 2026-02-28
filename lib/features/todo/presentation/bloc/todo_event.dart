@@ -69,3 +69,13 @@ class SearchTodos extends TodoEvent{
   // TODO: implement props
   List<Object?> get props => [query];
 }
+
+class EditTodo extends TodoEvent {
+  final TodoModel updatedTodo;
+  const EditTodo({
+    required this.updatedTodo
+});
+  @override
+  // TODO: implement props
+  List<Object?> get props => [updatedTodo];
+}

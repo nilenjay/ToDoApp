@@ -20,6 +20,7 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
     on<ChangeFilter>(_changeFilter);
     _loadTodos();
     on<SearchTodos>(_searchTodos);
+    on<EditTodo>(_editTodo);
   }
 
   Future<void>_addTodo(AddTodo event, Emitter<TodoState> emit) async {
@@ -73,11 +74,23 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
       oldTodos = (state as TodoDeleted).todos;
     }
 
+    final toggled = oldTodos.firstWhere((t) => t.id == event.id);
     final newTodos = oldTodos.map((todo) => todo.id == event.id ? todo.copyWith(isComplete: !todo.isComplete) : todo).toList();
+    final bool willBeComplete = !toggled.isComplete;
 
+    if (willBeComplete) {
+      // became completed → cancel reminder
+      await NotificationService.instance
+          .cancelNotification(event.id.hashCode);
+    } else {
+      // became incomplete → reschedule reminder
+      final updatedTodo = toggled.copyWith(
+        isComplete: willBeComplete,
+      );
+
+      await _scheduleReminder(updatedTodo);
+    }
     await _localDataSource.saveTodos(newTodos);
-    await NotificationService.instance
-        .cancelNotification(event.id.hashCode);
     emit(TodoLoaded(todos: newTodos));
   }
 
@@ -155,5 +168,50 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
       body: todo.description,
       scheduledTime: scheduledTime,
     );
+  }
+
+  Future<void> _editTodo(EditTodo event, Emitter<TodoState> emit)async {
+    List<TodoModel>oldTodos=[];
+
+    if (state is TodoLoaded) {
+      oldTodos = (state as TodoLoaded).todos;
+    } else if (state is TodoDeleted) {
+      oldTodos = (state as TodoDeleted).todos;
+    }
+
+    TodoFilter currentFilter = TodoFilter.all;
+    String currentSearch = '';
+
+    final currentState = state;
+
+    if (currentState is TodoLoaded) {
+      currentFilter = currentState.filter;
+      currentSearch = currentState.searchQuery;
+    } else if (currentState is TodoDeleted) {
+      currentFilter = currentState.filter;
+      currentSearch = currentState.searchQuery;
+    }
+
+    final oldTodo =
+    oldTodos.firstWhere((t) => t.id == event.updatedTodo.id);
+
+    await NotificationService.instance.cancelNotification(oldTodo.id.hashCode);
+
+    final newTodos = oldTodos.map((todo) {
+      if (todo.id == event.updatedTodo.id) return event.updatedTodo;
+      return todo;
+    }).toList();
+
+    if (!event.updatedTodo.isComplete) {
+      await _scheduleReminder(event.updatedTodo);
+    }
+
+    await _localDataSource.saveTodos(newTodos);
+
+    emit(TodoLoaded(
+      todos: newTodos,
+      filter: currentFilter,
+      searchQuery: currentSearch,
+    ));
   }
 }
