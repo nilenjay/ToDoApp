@@ -138,6 +138,15 @@ class TodoScreen extends StatelessWidget {
                               );
                             },
                           ),
+                          ChoiceChip(
+                            label: const Text('Overdue'),
+                            selected: currentFilter == TodoFilter.completed,
+                            onSelected: (_) {
+                              context.read<TodoBloc>().add(
+                                ChangeFilter(filter: TodoFilter.completed),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
