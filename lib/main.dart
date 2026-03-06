@@ -30,9 +30,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: TodoScreen(),
+      title: 'Todo App',
+
+      theme: ThemeData(
+        primaryColor: const Color(0xFF6366F1),
+
+        scaffoldBackgroundColor: const Color(0xFFF9FAFB),
+
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          centerTitle: true,
+        ),
+
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFF6366F1),
+        ),
+
+        cardTheme: CardThemeData(
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+      home: const TodoScreen(),
     );
   }
 }

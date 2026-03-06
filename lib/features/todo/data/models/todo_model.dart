@@ -45,6 +45,7 @@ class TodoModel extends Equatable{
     DateTime? addedDate,
     Object? dueDate = _noValue,
     Object? reminderTime = _noValue,
+    DateTime? startReminder,
   }) {
     return TodoModel(
       id: id ?? this.id,
@@ -57,10 +58,11 @@ class TodoModel extends Equatable{
       reminderTime: identical(reminderTime, _noValue)
           ? this.reminderTime
           : reminderTime as DateTime?,
+      startReminder: startReminder ?? this.startReminder,
     );
   }
 
   @override
   // TODO: implement props
-  List<Object?> get props => [id,addedDate,isComplete,description,dueDate,reminderTime];
+  List<Object?> get props => [id,addedDate,isComplete,description,dueDate,reminderTime,startReminder];
 }

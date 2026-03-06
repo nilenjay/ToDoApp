@@ -367,38 +367,105 @@ class TodoTile extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Card(
-          elevation: 2,
-          child: ListTile(
-            onTap: () {
-              showEditTodoDialog(context, todo);
-            },
-            leading: Checkbox(
-              value: todo.isComplete,
-              onChanged: (_) {
-                context.read<TodoBloc>().add(
-                  ToggleTodoStatus(id: todo.id),
-                );
-              },
-            ),
-            title: Text(
-              todo.description,
-              style: TextStyle(
-                color: todo.isComplete ? Colors.grey : Colors.black,
-                decoration: todo.isComplete
-                    ? TextDecoration.lineThrough
-                    : TextDecoration.none,
-              ),
-            ),
-            subtitle: todo.dueDate != null
-                ? Text(
-              'Due: ${todo.dueDate!.toLocal().toString().split(' ')[0]}',
-              style: TextStyle(
-                color: isOverdue ? Colors.red : Colors.grey,
-              ),
-            )
-                : null,
+          margin: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 6,
           ),
-        ),
+
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+
+            child: Row(
+              children: [
+
+                Checkbox(
+                  value: todo.isComplete,
+                  onChanged: (_) {
+                    context.read<TodoBloc>().add(
+                      ToggleTodoStatus(id: todo.id),
+                    );
+                  },
+                ),
+
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      Text(
+                        todo.description,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decoration: todo.isComplete
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          color: todo.isComplete
+                              ? Colors.grey
+                              : Colors.black,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Row(
+                        children: [
+
+                          if (todo.dueDate != null)
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today,
+                                    size: 14,
+                                    color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDate(todo.dueDate!),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                          const SizedBox(width: 12),
+
+                          if (todo.reminderTime != null)
+                            Row(
+                              children: [
+                                const Icon(Icons.notifications,
+                                    size: 14,
+                                    color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatTime(todo.reminderTime!),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    context.read<TodoBloc>().add(
+                      DeleteTodo(id: todo.id),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        )
       ),
     );
   }
@@ -539,4 +606,31 @@ void showEditTodoDialog(BuildContext context, TodoModel todo) {
       );
     },
   );
+}
+
+String _formatDate(DateTime date) {
+  final now = DateTime.now();
+
+  if (date.day == now.day &&
+      date.month == now.month &&
+      date.year == now.year) {
+    return "Today";
+  }
+
+  final tomorrow = now.add(const Duration(days: 1));
+
+  if (date.day == tomorrow.day &&
+      date.month == tomorrow.month &&
+      date.year == tomorrow.year) {
+    return "Tomorrow";
+  }
+
+  return "${date.day}/${date.month}/${date.year}";
+}
+
+String _formatTime(DateTime time) {
+  final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
+  final period = time.hour >= 12 ? "PM" : "AM";
+
+  return "$hour:${time.minute.toString().padLeft(2, '0')} $period";
 }

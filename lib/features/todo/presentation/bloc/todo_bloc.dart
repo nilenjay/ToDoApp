@@ -167,13 +167,17 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
 
     DateTime? scheduledTime;
 
-    if (todo.startReminder != null) {
-      await NotificationService.instance.scheduleNotification(
-        id: (todo.id + "_start").hashCode,
-        title: "Start Task",
-        body: "Start working on: ${todo.description}",
-        scheduledTime: todo.startReminder!,
-      );
+    if (todo.dueDate != null) {
+      final startTime = _calculateSmartStartReminder(todo.dueDate);
+
+      if (startTime != null && startTime.isAfter(DateTime.now())) {
+        await NotificationService.instance.scheduleNotification(
+          id: (todo.id + "_start").hashCode,
+          title: "Start Task",
+          body: "Start working on: ${todo.description}",
+          scheduledTime: startTime,
+        );
+      }
     }
 
     /// 1️⃣ If user explicitly set reminder → use it
@@ -280,5 +284,32 @@ class TodoBloc extends Bloc<TodoEvent,TodoState>{
       filter: currentFilter,
       searchQuery: currentSearch,
     ));
+  }
+
+  DateTime? _calculateSmartStartReminder(DateTime? dueDate) {
+    if (dueDate == null) return null;
+
+    final now = DateTime.now();
+    final difference = dueDate.difference(now).inDays;
+
+    /// Due today
+    if (difference <= 0) {
+      return now;
+    }
+
+    /// Due tomorrow
+    if (difference == 1) {
+      return DateTime(now.year, now.month, now.day, 18, 0);
+    }
+
+    /// Due in 2-3 days
+    if (difference <= 3) {
+      final tomorrow = now.add(const Duration(days: 1));
+      return DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 18, 0);
+    }
+
+    /// Due in 4+ days
+    final startDay = dueDate.subtract(const Duration(days: 2));
+    return DateTime(startDay.year, startDay.month, startDay.day, 18, 0);
   }
 }
