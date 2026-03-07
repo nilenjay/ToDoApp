@@ -260,6 +260,13 @@ class _TodoScreenState extends State<TodoScreen> {
                   children: [
 
                     ChoiceChip(
+                      selectedColor: Colors.deepPurple.shade100,
+                      backgroundColor: Colors.grey.shade200,
+                      labelStyle: TextStyle(
+                        color: filter == TodoFilter.all
+                            ? Colors.deepPurple
+                            : Colors.black87,
+                      ),
                       label: const Text("All"),
                       selected: filter == TodoFilter.all,
                       onSelected: (_) {
@@ -270,6 +277,13 @@ class _TodoScreenState extends State<TodoScreen> {
                     ),
 
                     ChoiceChip(
+                      selectedColor: Colors.deepPurple.shade100,
+                      backgroundColor: Colors.grey.shade200,
+                      labelStyle: TextStyle(
+                        color: filter == TodoFilter.all
+                            ? Colors.deepPurple
+                            : Colors.black87,
+                      ),
                       label: const Text("Active"),
                       selected: filter == TodoFilter.active,
                       onSelected: (_) {
@@ -280,6 +294,13 @@ class _TodoScreenState extends State<TodoScreen> {
                     ),
 
                     ChoiceChip(
+                      selectedColor: Colors.deepPurple.shade100,
+                      backgroundColor: Colors.grey.shade200,
+                      labelStyle: TextStyle(
+                        color: filter == TodoFilter.all
+                            ? Colors.deepPurple
+                            : Colors.black87,
+                      ),
                       label: const Text("Completed"),
                       selected: filter == TodoFilter.completed,
                       onSelected: (_) {
@@ -330,17 +351,32 @@ class _TodoScreenState extends State<TodoScreen> {
       children: [
 
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+          child: Row(
+            children: [
+
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              Text(
+                "(${todos.length})",
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ),
 
-        ...todos.map((todo) => _buildTodoTile(todo)),
+        ...todos.map((todo) => _buildTodoTile(todo)).toList(),
       ],
     );
   }
@@ -390,6 +426,7 @@ class _TodoScreenState extends State<TodoScreen> {
 
         child: Material(
           elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
 
           child: Container(
@@ -398,91 +435,96 @@ class _TodoScreenState extends State<TodoScreen> {
               color: Colors.white,
             ),
 
-            child: Row(
-              children: [
+            // FIX: IntrinsicHeight allows the priority strip to use
+            // double.infinity height relative to its siblings in the Row.
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
 
-                /// PRIORITY STRIP
-                Container(
-                  width: 6,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: getPriorityGradient(todo.priority),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
+                  /// PRIORITY STRIP
+                  Container(
+                    width: 6,
+                    decoration: BoxDecoration(
+                      gradient: getPriorityGradient(todo.priority),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-                /// CONTENT
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  /// CONTENT
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
 
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
 
-                        /// DESCRIPTION
-                        Text(
-                          todo.description,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            decoration: todo.isComplete
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
+                          /// DESCRIPTION
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 250),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: todo.isComplete ? Colors.grey : Colors.black,
+                              decoration: todo.isComplete
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                            ),
+                            child: Text(todo.description),
                           ),
-                        ),
 
-                        const SizedBox(height: 6),
+                          const SizedBox(height: 6),
 
-                        /// META INFO
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 4,
-                          children: [
+                          /// META INFO
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 4,
+                            children: [
 
-                            if (todo.dueDate != null)
-                              _infoIcon(
-                                  Icons.calendar_today,
-                                  _formatDate(todo.dueDate!)
-                              ),
+                              if (todo.dueDate != null)
+                                _infoIcon(
+                                    Icons.calendar_today,
+                                    _formatDate(todo.dueDate!)
+                                ),
 
-                            if (todo.startReminder != null)
-                              _infoIcon(
-                                  Icons.play_arrow,
-                                  _formatTime(todo.startReminder!)
-                              ),
+                              if (todo.startReminder != null)
+                                _infoIcon(
+                                    Icons.play_arrow,
+                                    _formatTime(todo.startReminder!)
+                                ),
 
-                            if (todo.reminderTime != null)
-                              _infoIcon(
-                                  Icons.notifications,
-                                  _formatTime(todo.reminderTime!)
-                              ),
-                          ],
-                        ),
-                      ],
+                              if (todo.reminderTime != null)
+                                _infoIcon(
+                                    Icons.notifications,
+                                    _formatTime(todo.reminderTime!)
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                /// CHECKBOX
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
+                  /// CHECKBOX
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
 
-                  child: Checkbox(
-                    value: todo.isComplete,
-                    onChanged: (_) {
-                      context.read<TodoBloc>().add(
-                        ToggleTodoStatus(id: todo.id),
-                      );
-                    },
+                    child: Checkbox(
+                      value: todo.isComplete,
+                      onChanged: (_) {
+                        context.read<TodoBloc>().add(
+                          ToggleTodoStatus(id: todo.id),
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -706,6 +748,7 @@ Color getPriorityColor(int priority) {
       return Colors.grey;
   }
 }
+
 LinearGradient getPriorityGradient(int priority) {
   switch (priority) {
     case 1:
