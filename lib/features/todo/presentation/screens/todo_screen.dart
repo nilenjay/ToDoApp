@@ -16,6 +16,40 @@ class TodoScreen extends StatefulWidget {
 
 class _TodoScreenState extends State<TodoScreen> {
 
+  Widget buildProgressIndicator(List<TodoModel> todos) {
+    final total = todos.length;
+    final completed = todos.where((t) => t.isComplete).length;
+
+    double progress = 0;
+    if (total > 0) {
+      progress = completed / total;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "$completed / $total tasks completed",
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -139,7 +173,8 @@ class _TodoScreenState extends State<TodoScreen> {
           }
 
           return Column(
-            children: [
+            children:[
+              buildProgressIndicator(todos),
 
               /// SEARCH
 
@@ -310,14 +345,31 @@ class _TodoScreenState extends State<TodoScreen> {
               },
             ),
 
-            title: Text(
-              todo.description,
-              style: TextStyle(
-                decoration: todo.isComplete
-                    ? TextDecoration.lineThrough
-                    : TextDecoration.none,
-                color: todo.isComplete ? Colors.grey : Colors.black,
-              ),
+            title: Row(
+              children: [
+
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: getPriorityColor(todo.priority),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: Text(
+                    todo.description,
+                    style: TextStyle(
+                      decoration: todo.isComplete
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             subtitle: Wrap(
@@ -371,6 +423,7 @@ class _TodoScreenState extends State<TodoScreen> {
     DateTime? dueDate = todo?.dueDate;
     DateTime? reminder = todo?.reminderTime;
     DateTime? startReminder = todo?.startReminder;
+    int selectedPriority = 2;
 
     showDialog(
       context: context,
@@ -385,6 +438,22 @@ class _TodoScreenState extends State<TodoScreen> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+
+                  DropdownButtonFormField<int>(
+                    value: selectedPriority,
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text("High Priority")),
+                      DropdownMenuItem(value: 2, child: Text("Medium Priority")),
+                      DropdownMenuItem(value: 3, child: Text("Low Priority")),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedPriority = value;
+                        });
+                      }
+                    },
+                  ),
 
                   TextField(
                     controller: controller,
@@ -485,6 +554,7 @@ class _TodoScreenState extends State<TodoScreen> {
                           dueDate: dueDate,
                           reminderTime: reminder,
                           startReminder: startReminder,
+                          priority: selectedPriority,
                         ),
                       );
                     }
@@ -523,5 +593,18 @@ class _TodoScreenState extends State<TodoScreen> {
     final period = time.hour >= 12 ? "PM" : "AM";
 
     return "$hour:${time.minute.toString().padLeft(2, '0')} $period";
+  }
+}
+
+Color getPriorityColor(int priority) {
+  switch (priority) {
+    case 1:
+      return Colors.red;
+    case 2:
+      return Colors.orange;
+    case 3:
+      return Colors.green;
+    default:
+      return Colors.grey;
   }
 }

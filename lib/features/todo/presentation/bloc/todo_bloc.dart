@@ -81,8 +81,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
     emit(TodoDeleted(deletedTodo: deletedTodo, todos: newTodos));
   }
 
-  Future<void> _toggleTodoStatus(
-      ToggleTodoStatus event, Emitter<TodoState> emit) async {
+  Future<void> _toggleTodoStatus(ToggleTodoStatus event, Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos = [];
 
     if (state is TodoLoaded) {
@@ -117,8 +116,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
     emit(TodoLoaded(todos: todos));
   }
 
-  Future<void> _restoreTodo(
-      RestoreTodo event, Emitter<TodoState> emit) async {
+  Future<void> _restoreTodo(RestoreTodo event, Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos = [];
 
     if (state is TodoLoaded) {
@@ -132,8 +130,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
     emit(TodoLoaded(todos: newTodos));
   }
 
-  Future<void> _changeFilter(
-      ChangeFilter event, Emitter<TodoState> emit) async {
+  Future<void> _changeFilter(ChangeFilter event, Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos = [];
 
     if (state is TodoLoaded) {
@@ -145,8 +142,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
     emit(TodoLoaded(todos: oldTodos, filter: event.filter));
   }
 
-  Future<void> _searchTodos(
-      SearchTodos event, Emitter<TodoState> emit) async {
+  Future<void> _searchTodos(SearchTodos event, Emitter<TodoState> emit) async {
     List<TodoModel> oldTodos = [];
     TodoFilter currentFilter = TodoFilter.all;
 
