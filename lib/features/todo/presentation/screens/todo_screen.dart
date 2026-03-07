@@ -465,7 +465,7 @@ class _TodoScreenState extends State<TodoScreen> {
     DateTime? dueDate = todo?.dueDate;
     DateTime? reminder = todo?.reminderTime;
     DateTime? startReminder = todo?.startReminder;
-    int selectedPriority = 2;
+    int selectedPriority = todo?.priority ?? 2;
 
     showDialog(
       context: context,
@@ -610,6 +610,7 @@ class _TodoScreenState extends State<TodoScreen> {
                             dueDate: dueDate,
                             reminderTime: reminder,
                             startReminder: startReminder,
+                            priority: selectedPriority,
                           ),
                         ),
                       );

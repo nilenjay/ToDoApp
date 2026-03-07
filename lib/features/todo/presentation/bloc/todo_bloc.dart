@@ -47,6 +47,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
       dueDate: event.dueDate,
       reminderTime: event.reminderTime,
       startReminder: event.startReminder,
+      priority: event.priority,
     );
 
     final newTodos = [...oldTodos, newTodo];
