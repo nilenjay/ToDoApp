@@ -404,9 +404,9 @@ class _TodoScreenState extends State<TodoScreen> {
                 /// PRIORITY STRIP
                 Container(
                   width: 6,
-                  height: 72,
+                  height: double.infinity,
                   decoration: BoxDecoration(
-                    color: getPriorityColor(todo.priority),
+                    gradient: getPriorityGradient(todo.priority),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       bottomLeft: Radius.circular(16),
@@ -704,5 +704,43 @@ Color getPriorityColor(int priority) {
       return Colors.green;
     default:
       return Colors.grey;
+  }
+}
+LinearGradient getPriorityGradient(int priority) {
+  switch (priority) {
+    case 1:
+      return const LinearGradient(
+        colors: [
+          Color(0xFFFF6B6B),
+          Color(0xFFFF3B3B),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+    case 2:
+      return const LinearGradient(
+        colors: [
+          Color(0xFFFFE082),
+          Color(0xFFFFC107),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+    case 3:
+      return const LinearGradient(
+        colors: [
+          Color(0xFF81C784),
+          Color(0xFF43A047),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+    default:
+      return const LinearGradient(
+        colors: [Colors.grey, Colors.grey],
+      );
   }
 }
