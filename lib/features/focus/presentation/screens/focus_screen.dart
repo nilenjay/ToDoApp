@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../bloc/focus_bloc/focus_bloc.dart';
 import '../bloc/focus_bloc/focus_state.dart';
 import 'focus_active_screen.dart';

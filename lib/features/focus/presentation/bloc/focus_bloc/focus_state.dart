@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../data/models/focus_model.dart';
+import '../../../../focus/data/models/focus_model.dart';
 
 abstract class FocusState extends Equatable {
   const FocusState();

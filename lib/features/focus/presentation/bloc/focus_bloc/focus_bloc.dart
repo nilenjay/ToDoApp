@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:todo_app/core/notifications/notification_service.dart';
-import '../../../data/datasources/focus_local_datasourse.dart';
-import '../../../data/models/focus_model.dart';
+import '../../../../focus/data/datasourses/focus_local_datasourse.dart';
+import '../../../../focus/data/models/focus_model.dart';
 import 'focus_event.dart';
 import 'focus_state.dart';
 

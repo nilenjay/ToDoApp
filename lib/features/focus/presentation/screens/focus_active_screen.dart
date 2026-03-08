@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../data/models/focus_model.dart';
 import '../bloc/focus_bloc/focus_bloc.dart';
 import '../bloc/focus_bloc/focus_event.dart';

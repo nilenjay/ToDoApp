@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:hive/hive.dart';
 
+part 'focus_model.g.dart';
+
 // ─── FocusType enum ───────────────────────────────────────────────────────────
 
 @HiveType(typeId: 1)
@@ -78,7 +80,7 @@ class SessionLog extends Equatable {
   final int breaksCompleted;
 
   @HiveField(6)
-  final int rating; // 0 = unrated, 1–5 = user rating
+  final int rating;
 
   @HiveField(7)
   final DateTime date;
