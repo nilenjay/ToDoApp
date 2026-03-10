@@ -563,7 +563,13 @@ class _FocusActiveScreenState extends State<FocusActiveScreen>
                   ],
                 ),
 
-                const SizedBox(height: 48),
+                // kBottomNavigationBarHeight (56) + system gesture inset
+                // + extra breathing room so the button clears the nav bar.
+                SizedBox(
+                  height: kBottomNavigationBarHeight +
+                      MediaQuery.of(context).padding.bottom +
+                      24,
+                ),
               ],
             ),
           ),
