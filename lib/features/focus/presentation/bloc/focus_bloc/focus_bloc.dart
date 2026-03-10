@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:todo_app/core/notifications/notification_service.dart';
-import '../../../../focus/data/datasourses/focus_local_datasourse.dart';
-import '../../../../focus/data/models/focus_model.dart';
-import 'focus_event.dart';
-import 'focus_state.dart';
+import 'package:todo_app/features/focus/data/datasourses/focus_local_datasourse.dart';
+import 'package:todo_app/features/focus/data/models/focus_model.dart';
+import 'package:todo_app/features/focus/presentation/bloc/focus_bloc/focus_event.dart';
+import 'package:todo_app/features/focus/presentation/bloc/focus_bloc/focus_state.dart';
 
 class FocusBloc extends Bloc<FocusEvent, FocusState> {
   final FocusLocalDataSource _localDataSource;
 
   Timer? _ticker;
 
-  // Runtime-only state (not in Equatable state to avoid redundant rebuilds)
+  // Runtime-only (not in Equatable state to avoid redundant rebuilds)
   List<BreakInterval> _breaks = [];
   int _focusElapsedSeconds = 0;
 
@@ -24,6 +24,7 @@ class FocusBloc extends Bloc<FocusEvent, FocusState> {
     on<EndSession>(_endSession);
     on<ResetSession>(_resetSession);
     on<RateSession>(_rateSession);
+    on<SkipBreak>(_skipBreak);
 
     add(const LoadSessions());
   }
@@ -108,28 +109,7 @@ class FocusBloc extends Bloc<FocusEvent, FocusState> {
         ));
       } else {
         // break → focus
-        final nextBreakIndex = current.currentBreakIndex + 1;
-        final remainingSeconds = current.totalSeconds - newElapsed;
-
-        final nextFocusSeconds = nextBreakIndex < _breaks.length
-            ? (_breaks[nextBreakIndex].afterMinutes -
-            _breaks[current.currentBreakIndex].afterMinutes) *
-            60
-            : remainingSeconds;
-
-        await NotificationService.instance.scheduleNotification(
-          id: 1,
-          title: '🎯 Back to Focus!',
-          body: 'Break\'s over — let\'s get back to it.',
-          scheduledTime: DateTime.now(),
-        );
-
-        emit(current.copyWith(
-          elapsedSeconds: newElapsed,
-          phaseSecondsLeft: nextFocusSeconds.clamp(0, remainingSeconds),
-          phase: SessionPhase.focus,
-          currentBreakIndex: nextBreakIndex,
-        ));
+        await _transitionToFocus(current, newElapsed, emit);
       }
       return;
     }
@@ -138,6 +118,51 @@ class FocusBloc extends Bloc<FocusEvent, FocusState> {
     emit(current.copyWith(
       elapsedSeconds: newElapsed,
       phaseSecondsLeft: newPhaseLeft,
+    ));
+  }
+
+  // ─── Skip Break ────────────────────────────────────────────────────────────
+
+  Future<void> _skipBreak(SkipBreak event, Emitter<FocusState> emit) async {
+    if (state is! FocusRunning) return;
+    final current = state as FocusRunning;
+    if (current.phase != SessionPhase.breakTime) return;
+
+    await NotificationService.instance.scheduleNotification(
+      id: 1,
+      title: '🎯 Back to Focus!',
+      body: 'Break skipped — let\'s keep going.',
+      scheduledTime: DateTime.now(),
+    );
+
+    await _transitionToFocus(current, current.elapsedSeconds, emit);
+  }
+
+  // ─── Shared: break → focus transition ─────────────────────────────────────
+
+  Future<void> _transitionToFocus(
+      FocusRunning current, int newElapsed, Emitter<FocusState> emit) async {
+    final nextBreakIndex = current.currentBreakIndex + 1;
+    final remainingSeconds = current.totalSeconds - newElapsed;
+
+    final nextFocusSeconds = nextBreakIndex < _breaks.length
+        ? (_breaks[nextBreakIndex].afterMinutes -
+        _breaks[current.currentBreakIndex].afterMinutes) *
+        60
+        : remainingSeconds;
+
+    await NotificationService.instance.scheduleNotification(
+      id: 1,
+      title: '🎯 Back to Focus!',
+      body: 'Break\'s over — let\'s get back to it.',
+      scheduledTime: DateTime.now(),
+    );
+
+    emit(current.copyWith(
+      elapsedSeconds: newElapsed,
+      phaseSecondsLeft: nextFocusSeconds.clamp(0, remainingSeconds),
+      phase: SessionPhase.focus,
+      currentBreakIndex: nextBreakIndex,
     ));
   }
 
@@ -157,7 +182,7 @@ class FocusBloc extends Bloc<FocusEvent, FocusState> {
     _startTicker();
   }
 
-  // ─── End (user-triggered) ─────────────────────────────────────────────────
+  // ─── End ───────────────────────────────────────────────────────────────────
 
   Future<void> _endSession(
       EndSession event, Emitter<FocusState> emit) async {
@@ -247,7 +272,8 @@ class FocusBloc extends Bloc<FocusEvent, FocusState> {
 
     await NotificationService.instance.scheduleNotification(
       id: 2,
-      title: completionPct >= 1.0 ? '🎉 Session Complete!' : '⏹ Session Ended',
+      title:
+      completionPct >= 1.0 ? '🎉 Session Complete!' : '⏹ Session Ended',
       body: completionPct >= 1.0
           ? 'Great work on "${current.sessionName}"!'
           : 'You focused for ${_focusElapsedSeconds ~/ 60} min on "${current.sessionName}".',

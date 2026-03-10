@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../../focus/data/models/focus_model.dart';
+import 'package:todo_app/features/focus/data/models/focus_model.dart';
 
 abstract class FocusEvent extends Equatable {
   const FocusEvent();
@@ -41,7 +41,12 @@ class ResetSession extends FocusEvent {
   const ResetSession();
 }
 
-// ─── Timer tick (internal — fired by Bloc's own periodic Timer) ───────────────
+/// Skips the current break and immediately returns to focus phase.
+class SkipBreak extends FocusEvent {
+  const SkipBreak();
+}
+
+// ─── Timer tick (internal) ────────────────────────────────────────────────────
 
 class TimerTicked extends FocusEvent {
   const TimerTicked();
