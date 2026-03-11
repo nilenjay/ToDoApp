@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/models/todo_model.dart';
 import '../bloc/todo_bloc/todo_bloc.dart';
 import '../bloc/todo_bloc/todo_state.dart';
-import 'todo_screen.dart'; // reuses getPriorityGradient, getPriorityColor
+import 'app_theme.dart';
+import 'todo_screen.dart'; // getPriorityGradient
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -14,77 +15,50 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  DateTime _focusedMonth = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
-  );
+  DateTime _focusedMonth =
+  DateTime(DateTime.now().year, DateTime.now().month);
   DateTime _selectedDay = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
-    DateTime.now().day,
-  );
-
-  // ─── Helpers ───────────────────────────────────────────────────────────────
+      DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  /// Returns all days in the grid (including leading/trailing days from
-  /// adjacent months to fill complete weeks).
-  List<DateTime?> _buildGridDays() {
-    final firstOfMonth =
+  List<DateTime> _buildGridDays() {
+    final first =
     DateTime(_focusedMonth.year, _focusedMonth.month, 1);
-    final lastOfMonth =
+    final last =
     DateTime(_focusedMonth.year, _focusedMonth.month + 1, 0);
-
-    // Sunday = 0 ... Saturday = 6
-    final leadingBlanks = firstOfMonth.weekday % 7;
-    final trailingBlanks =
-        6 - (lastOfMonth.weekday % 7);
-
-    final days = <DateTime?>[];
-
-    for (int i = 0; i < leadingBlanks; i++) {
-      days.add(firstOfMonth.subtract(Duration(days: leadingBlanks - i)));
-    }
-    for (int d = 1; d <= lastOfMonth.day; d++) {
+    final leading = first.weekday % 7;
+    final trailing = 6 - (last.weekday % 7);
+    final days = <DateTime>[];
+    for (int i = leading; i > 0; i--)
+      days.add(first.subtract(Duration(days: i)));
+    for (int d = 1; d <= last.day; d++)
       days.add(DateTime(_focusedMonth.year, _focusedMonth.month, d));
-    }
-    for (int i = 1; i <= trailingBlanks; i++) {
-      days.add(lastOfMonth.add(Duration(days: i)));
-    }
-
+    for (int i = 1; i <= trailing; i++)
+      days.add(last.add(Duration(days: i)));
     return days;
   }
 
-  // ─── Dot logic ─────────────────────────────────────────────────────────────
-
-  /// Returns which dot types a day should show.
-  /// 'start' = purple dot (startReminder falls on this day)
-  /// 'due'   = red dot    (dueDate falls on this day)
   Set<String> _dotsForDay(DateTime day, List<TodoModel> todos) {
     final dots = <String>{};
-    for (final todo in todos) {
-      if (todo.isComplete) continue;
-      if (todo.startReminder != null &&
-          _isSameDay(todo.startReminder!, day)) {
+    for (final t in todos) {
+      if (t.isComplete) continue;
+      if (t.startReminder != null && _isSameDay(t.startReminder!, day))
         dots.add('start');
-      }
-      if (todo.dueDate != null && _isSameDay(todo.dueDate!, day)) {
+      if (t.dueDate != null && _isSameDay(t.dueDate!, day))
         dots.add('due');
-      }
     }
     return dots;
   }
 
-  // ─── Tasks for selected day ─────────────────────────────────────────────────
-
-  List<TodoModel> _startingOn(DateTime day, List<TodoModel> todos) => todos
-      .where((t) =>
-  !t.isComplete &&
-      t.startReminder != null &&
-      _isSameDay(t.startReminder!, day))
-      .toList();
+  List<TodoModel> _startingOn(DateTime day, List<TodoModel> todos) =>
+      todos
+          .where((t) =>
+      !t.isComplete &&
+          t.startReminder != null &&
+          _isSameDay(t.startReminder!, day))
+          .toList();
 
   List<TodoModel> _dueOn(DateTime day, List<TodoModel> todos) => todos
       .where((t) =>
@@ -93,7 +67,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
       _isSameDay(t.dueDate!, day))
       .toList();
 
-  // ─── Build ──────────────────────────────────────────────────────────────────
+  static const _months = [
+    'January', 'February', 'March', 'April',
+    'May', 'June', 'July', 'August',
+    'September', 'October', 'November', 'December',
+  ];
+  static const _weekdays = [
+    'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -108,85 +89,221 @@ class _CalendarScreenState extends State<CalendarScreen> {
         final due = _dueOn(_selectedDay, todos);
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Calendar')),
-          body: Column(
-            children: [
-              // ── Month navigation ──────────────────────────────────────
-              _MonthHeader(
-                focusedMonth: _focusedMonth,
-                onPrev: () => setState(() {
-                  _focusedMonth = DateTime(
-                      _focusedMonth.year, _focusedMonth.month - 1);
-                }),
-                onNext: () => setState(() {
-                  _focusedMonth = DateTime(
-                      _focusedMonth.year, _focusedMonth.month + 1);
-                }),
+          backgroundColor: Colors.transparent,
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text(
+              'Calendar',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
               ),
+            ),
+          ),
+          body: Container(
+            decoration: AppTheme.backgroundDecoration,
+            child: Column(
+              children: [
+                SizedBox(
+                    height: MediaQuery.of(context).padding.top +
+                        kToolbarHeight),
 
-              // ── Day-of-week headers ───────────────────────────────────
-              const _WeekdayRow(),
-
-              // ── Calendar grid ─────────────────────────────────────────
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7,
-                  mainAxisSpacing: 4,
-                  crossAxisSpacing: 4,
-                  childAspectRatio: 1,
-                ),
-                itemCount: gridDays.length,
-                itemBuilder: (context, index) {
-                  final day = gridDays[index];
-                  if (day == null) return const SizedBox();
-
-                  final isCurrentMonth =
-                      day.month == _focusedMonth.month;
-                  final isSelected = _isSameDay(day, _selectedDay);
-                  final isToday = _isSameDay(day, DateTime.now());
-                  final dots = _dotsForDay(day, todos);
-
-                  return _DayCell(
-                    day: day,
-                    isCurrentMonth: isCurrentMonth,
-                    isSelected: isSelected,
-                    isToday: isToday,
-                    hasDueDot: dots.contains('due'),
-                    hasStartDot: dots.contains('start'),
-                    onTap: () =>
-                        setState(() => _selectedDay = day),
-                  );
-                },
-              ),
-
-              const Divider(height: 1),
-
-              // ── Tasks for selected day ────────────────────────────────
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  children: [
-                    _TaskSection(
-                      icon: Icons.play_circle,
-                      iconColor: Colors.green,
-                      label: 'Starting',
-                      todos: starting,
+                // ── Month navigation ──────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: AppTheme.glassCard(radius: 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left,
+                              color: AppTheme.textSecondary),
+                          onPressed: () => setState(() {
+                            _focusedMonth = DateTime(_focusedMonth.year,
+                                _focusedMonth.month - 1);
+                          }),
+                        ),
+                        Text(
+                          '${_months[_focusedMonth.month - 1]} ${_focusedMonth.year}',
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right,
+                              color: AppTheme.textSecondary),
+                          onPressed: () => setState(() {
+                            _focusedMonth = DateTime(_focusedMonth.year,
+                                _focusedMonth.month + 1);
+                          }),
+                        ),
+                      ],
                     ),
-                    _TaskSection(
-                      icon: Icons.flag,
-                      iconColor: Colors.red,
-                      label: 'Due',
-                      todos: due,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 8),
+
+                // ── Weekday headers ───────────────────────────────────
+                Padding(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: _weekdays
+                        .map((d) => Expanded(
+                      child: Center(
+                        child: Text(
+                          d,
+                          style: const TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ))
+                        .toList(),
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                // ── Calendar grid ─────────────────────────────────────
+                Padding(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 16),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      mainAxisSpacing: 4,
+                      crossAxisSpacing: 4,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: gridDays.length,
+                    itemBuilder: (context, i) {
+                      final day = gridDays[i];
+                      final isCurrentMonth =
+                          day.month == _focusedMonth.month;
+                      final isSelected = _isSameDay(day, _selectedDay);
+                      final isToday =
+                      _isSameDay(day, DateTime.now());
+                      final dots = _dotsForDay(day, todos);
+
+                      return GestureDetector(
+                        onTap: () =>
+                            setState(() => _selectedDay = day),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppTheme.accent
+                                : isToday
+                                ? AppTheme.accentGlow
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                            border: isToday && !isSelected
+                                ? Border.all(
+                                color: AppTheme.accent, width: 1)
+                                : null,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${day.day}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: isSelected || isToday
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : isCurrentMonth
+                                      ? AppTheme.textSecondary
+                                      : AppTheme.textMuted
+                                      .withOpacity(0.4),
+                                ),
+                              ),
+                              if (dots.isNotEmpty)
+                                Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                                  children: [
+                                    if (dots.contains('start'))
+                                      _Dot(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : AppTheme.accent),
+                                    if (dots.contains('start') &&
+                                        dots.contains('due'))
+                                      const SizedBox(width: 2),
+                                    if (dots.contains('due'))
+                                      _Dot(
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : AppTheme.priorityHigh),
+                                  ],
+                                )
+                              else
+                                const SizedBox(height: 5),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Divider
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(
+                      color: Colors.white.withOpacity(0.08), height: 1),
+                ),
+
+                // ── Task list ─────────────────────────────────────────
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      16, 12, 16,
+                      kBottomNavigationBarHeight +
+                          MediaQuery.of(context).padding.bottom +
+                          16,
+                    ),
+                    children: [
+                      _TaskSection(
+                        icon: Icons.play_circle,
+                        iconColor: AppTheme.accent,
+                        label: 'Starting',
+                        todos: starting,
+                      ),
+                      const SizedBox(height: 8),
+                      _TaskSection(
+                        icon: Icons.flag,
+                        iconColor: AppTheme.priorityHigh,
+                        label: 'Due',
+                        todos: due,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -194,166 +311,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 }
 
-// ─── Month Header ─────────────────────────────────────────────────────────────
-
-class _MonthHeader extends StatelessWidget {
-  final DateTime focusedMonth;
-  final VoidCallback onPrev;
-  final VoidCallback onNext;
-
-  const _MonthHeader({
-    required this.focusedMonth,
-    required this.onPrev,
-    required this.onNext,
-  });
-
-  static const _months = [
-    'January', 'February', 'March', 'April',
-    'May', 'June', 'July', 'August',
-    'September', 'October', 'November', 'December',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: onPrev,
-          ),
-          Text(
-            '${_months[focusedMonth.month - 1]} ${focusedMonth.year}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: onNext,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Weekday Row ──────────────────────────────────────────────────────────────
-
-class _WeekdayRow extends StatelessWidget {
-  const _WeekdayRow();
-
-  static const _days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: _days
-            .map((d) => Expanded(
-          child: Center(
-            child: Text(
-              d,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.grey,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ))
-            .toList(),
-      ),
-    );
-  }
-}
-
-// ─── Day Cell ─────────────────────────────────────────────────────────────────
-
-class _DayCell extends StatelessWidget {
-  final DateTime day;
-  final bool isCurrentMonth;
-  final bool isSelected;
-  final bool isToday;
-  final bool hasDueDot;
-  final bool hasStartDot;
-  final VoidCallback onTap;
-
-  const _DayCell({
-    required this.day,
-    required this.isCurrentMonth,
-    required this.isSelected,
-    required this.isToday,
-    required this.hasDueDot,
-    required this.hasStartDot,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    Color? bgColor;
-    Color textColor;
-
-    if (isSelected) {
-      bgColor = Colors.deepPurple;
-      textColor = Colors.white;
-    } else if (isToday) {
-      bgColor = Colors.deepPurple.withOpacity(0.12);
-      textColor = Colors.deepPurple;
-    } else {
-      textColor = isCurrentMonth
-          ? theme.textTheme.bodyMedium!.color!
-          : Colors.grey.shade400;
-    }
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          shape: BoxShape.circle,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${day.day}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight:
-                isSelected || isToday ? FontWeight.bold : FontWeight.normal,
-                color: textColor,
-              ),
-            ),
-            // Dots row
-            if (hasDueDot || hasStartDot)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (hasStartDot)
-                    _Dot(
-                      color: isSelected ? Colors.white : Colors.deepPurple,
-                    ),
-                  if (hasDueDot && hasStartDot)
-                    const SizedBox(width: 2),
-                  if (hasDueDot)
-                    _Dot(
-                      color: isSelected ? Colors.white70 : Colors.red,
-                    ),
-                ],
-              )
-            else
-              const SizedBox(height: 5), // keep cell height consistent
-          ],
-        ),
-      ),
-    );
-  }
-}
+// ─── Dot ─────────────────────────────────────────────────────────────────────
 
 class _Dot extends StatelessWidget {
   final Color color;
@@ -362,14 +320,14 @@ class _Dot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 5,
-      height: 5,
+      width: 4,
+      height: 4,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
 
-// ─── Task Section (Starting / Due) ───────────────────────────────────────────
+// ─── Task section ─────────────────────────────────────────────────────────────
 
 class _TaskSection extends StatelessWidget {
   final IconData icon;
@@ -389,148 +347,136 @@ class _TaskSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Row(
-            children: [
-              Icon(icon, color: iconColor, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                label,
+        Row(
+          children: [
+            Icon(icon, color: iconColor, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: iconColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${todos.length}',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
                   color: iconColor,
-                  fontSize: 15,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${todos.length}',
-                  style: TextStyle(
-                    color: iconColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+        const SizedBox(height: 8),
         if (todos.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text('No tasks',
-                style: TextStyle(color: Colors.grey, fontSize: 13)),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 4),
+            child: Text(
+              'No tasks',
+              style: const TextStyle(
+                  color: AppTheme.textMuted, fontSize: 13),
+            ),
           )
         else
-          ...todos.map((todo) => _CalendarTodoTile(todo: todo)),
+          ...todos.map((t) => _CalendarTile(todo: t)),
       ],
     );
   }
 }
 
-// ─── Calendar Todo Tile (same style as todo_screen _buildTodoTile) ────────────
+// ─── Calendar tile ────────────────────────────────────────────────────────────
 
-class _CalendarTodoTile extends StatelessWidget {
+class _CalendarTile extends StatelessWidget {
   final TodoModel todo;
-  const _CalendarTodoTile({required this.todo});
+  const _CalendarTile({required this.todo});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Material(
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                // Priority strip
-                Container(
-                  width: 6,
-                  decoration: BoxDecoration(
-                    gradient: getPriorityGradient(todo.priority),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                    ),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        decoration: AppTheme.glassCard(radius: 14),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              // Priority strip
+              Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  gradient: getPriorityGradient(todo.priority),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(14),
+                    bottomLeft: Radius.circular(14),
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Content
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          todo.description,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        todo.description,
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(height: 6),
+                      ),
+                      if (todo.dueDate != null ||
+                          todo.startReminder != null) ...[
+                        const SizedBox(height: 5),
                         Wrap(
                           spacing: 10,
-                          runSpacing: 4,
                           children: [
                             if (todo.dueDate != null)
-                              _infoIcon(Icons.calendar_today,
-                                  _formatDate(todo.dueDate!)),
+                              _chip(Icons.calendar_today,
+                                  _fmt(todo.dueDate!)),
                             if (todo.startReminder != null)
-                              _infoIcon(Icons.play_arrow,
-                                  _formatTime(todo.startReminder!)),
-                            if (todo.reminderTime != null)
-                              _infoIcon(Icons.notifications,
-                                  _formatTime(todo.reminderTime!)),
+                              _chip(Icons.play_arrow,
+                                  _fmtT(todo.startReminder!)),
                           ],
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _infoIcon(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: Colors.grey),
-        const SizedBox(width: 4),
-        Text(text,
-            style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
-    );
-  }
+  Widget _chip(IconData icon, String text) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 11, color: AppTheme.textMuted),
+      const SizedBox(width: 3),
+      Text(text,
+          style: const TextStyle(
+              fontSize: 11, color: AppTheme.textMuted)),
+    ],
+  );
 
-  String _formatDate(DateTime date) =>
-      '${date.day}/${date.month}/${date.year}';
-
-  String _formatTime(DateTime time) {
-    final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
-    final period = time.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:${time.minute.toString().padLeft(2, '0')} $period';
+  String _fmt(DateTime d) => '${d.day}/${d.month}/${d.year}';
+  String _fmtT(DateTime t) {
+    final h = t.hour % 12 == 0 ? 12 : t.hour % 12;
+    return '$h:${t.minute.toString().padLeft(2, '0')} ${t.hour >= 12 ? 'PM' : 'AM'}';
   }
 }

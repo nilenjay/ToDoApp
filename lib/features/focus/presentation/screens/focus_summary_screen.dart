@@ -75,7 +75,10 @@ class _FocusSummaryScreenState extends State<FocusSummaryScreen>
         animation: _controller,
         builder: (context, _) {
           return ListView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.fromLTRB(
+              24, 24, 24,
+              24 + kBottomNavigationBarHeight + MediaQuery.of(context).padding.bottom,
+            ),
             children: [
               // ── Completion card ───────────────────────────────────────
               Container(
