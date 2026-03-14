@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
 import 'core/notifications/notification_service.dart';
 import 'features/focus/data/datasourses/focus_local_datasourse.dart';
 import 'features/focus/data/models/focus_model.dart';
@@ -11,6 +10,7 @@ import 'features/focus/presentation/bloc/focus_bloc/focus_state.dart';
 import 'features/focus/presentation/screens/focus_screen.dart';
 import 'features/settings/cubit/theme_cubit.dart';
 import 'features/settings/data/datasources/settings_local_datasource.dart';
+import 'features/settings/data/models/settings_model.dart';
 import 'features/todo/data/datasources/todo_local_datasource.dart';
 import 'features/todo/data/models/todo_model.dart';
 import 'features/todo/presentation/bloc/todo_bloc/todo_bloc.dart';
