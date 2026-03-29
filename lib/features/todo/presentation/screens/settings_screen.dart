@@ -4,6 +4,7 @@ import 'package:todo_app/features/focus/data/models/focus_model.dart';
 import 'package:todo_app/features/settings/cubit/theme_cubit.dart';
 import 'package:todo_app/features/todo/presentation/screens/app_theme.dart';
 import 'package:todo_app/features/todo/presentation/screens/animated_theme_toggle.dart';
+import '../../../auth/bloc/auth_bloc.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -239,6 +240,139 @@ class SettingsScreen extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
+                // ── Account ───────────────────────────────────────────
+                _SectionHeader(label: 'ACCOUNT'),
+                const SizedBox(height: 10),
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, authState) {
+                    if (authState is AuthAuthenticated) {
+                      final user = authState.user;
+                      return _GlassCard(
+                        isDark: isDark,
+                        child: Column(
+                          children: [
+                            // User info
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor:
+                                  AppTheme.accentGlow,
+                                  backgroundImage: user.photoURL != null
+                                      ? NetworkImage(user.photoURL!)
+                                      : null,
+                                  child: user.photoURL == null
+                                      ? Text(
+                                    (user.displayName ?? 'U')[0]
+                                        .toUpperCase(),
+                                    style: const TextStyle(
+                                      color: AppTheme.accent,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  )
+                                      : null,
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        user.displayName ?? 'User',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? AppTheme.textPrimary
+                                              : const Color(0xFF1E293B),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text(
+                                        user.email ?? '',
+                                        style: const TextStyle(
+                                          color: AppTheme.textMuted,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF34D399)
+                                        .withOpacity(0.12),
+                                    borderRadius:
+                                    BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: const Color(0xFF34D399)
+                                            .withOpacity(0.3)),
+                                  ),
+                                  child: const Text('Synced',
+                                      style: TextStyle(
+                                          color: Color(0xFF34D399),
+                                          fontSize: 11,
+                                          fontWeight:
+                                          FontWeight.w600)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            Divider(
+                                color: Colors.white.withOpacity(0.08),
+                                height: 1),
+                            const SizedBox(height: 4),
+                            // Sign out
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF87171)
+                                      .withOpacity(0.12),
+                                  borderRadius:
+                                  BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                    Icons.logout_rounded,
+                                    color: Color(0xFFF87171),
+                                    size: 18),
+                              ),
+                              title: const Text('Sign Out',
+                                  style: TextStyle(
+                                    color: Color(0xFFF87171),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  )),
+                              onTap: () {
+                                context.read<AuthBloc>().add(
+                                    const AuthSignOutRequested());
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    // Not logged in
+                    return _GlassCard(
+                      isDark: isDark,
+                      child: _SettingsRow(
+                        isDark: isDark,
+                        icon: Icons.cloud_off_rounded,
+                        iconColor: AppTheme.textMuted,
+                        title: 'Not signed in',
+                        subtitle: 'Tasks are local only',
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
                 // ── About ─────────────────────────────────────────────
                 _SectionHeader(label: 'ABOUT'),
                 const SizedBox(height: 10),
@@ -246,12 +380,57 @@ class SettingsScreen extends StatelessWidget {
                   isDark: isDark,
                   child: Column(
                     children: [
+                      // TaskFlow logo row
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.check_rounded,
+                                color: Colors.white, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'TaskFlow',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppTheme.textPrimary
+                                      : const Color(0xFF1E293B),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const Text(
+                                'Version 1.0.0',
+                                style: TextStyle(
+                                    color: AppTheme.textMuted,
+                                    fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Divider(
+                          color: Colors.white.withOpacity(0.08), height: 1),
+                      const SizedBox(height: 4),
                       _SettingsRow(
                         isDark: isDark,
-                        icon: Icons.info_outline_rounded,
-                        iconColor: AppTheme.textMuted,
-                        title: 'Version',
-                        subtitle: '1.0.0',
+                        icon: Icons.code_rounded,
+                        iconColor: const Color(0xFF34D399),
+                        title: 'Built with Flutter',
+                        subtitle: 'Plan. Focus. Achieve.',
                       ),
                     ],
                   ),

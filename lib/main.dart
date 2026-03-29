@@ -1,9 +1,13 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/notifications/notification_service.dart';
+import 'features/auth/bloc/auth_bloc.dart';
+import 'features/auth/data/service/auth_service.dart';
+import 'features/auth/router/auth_router.dart';
 import 'features/focus/data/datasourses/focus_local_datasourse.dart';
 import 'features/focus/data/models/focus_model.dart';
 import 'features/focus/presentation/bloc/focus_bloc/focus_bloc.dart';
@@ -17,14 +21,20 @@ import 'features/todo/data/models/todo_model.dart';
 import 'features/todo/presentation/bloc/todo_bloc/todo_bloc.dart';
 import 'features/todo/presentation/screens/calendar_screen.dart';
 import 'features/todo/presentation/screens/settings_screen.dart';
+import 'features/todo/presentation/screens/splash_screen.dart';
 import 'features/todo/presentation/screens/todo_screen.dart';
+import 'firebase_options.dart';
 
-/// Bump this number any time you change a Hive model schema.
-/// Hive will detect the mismatch and wipe the box cleanly.
-const int _schemaVersion = 2;
+const int _schemaVersion = 3;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   await NotificationService.instance.init();
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -33,18 +43,14 @@ Future<void> main() async {
   ));
 
   await Hive.initFlutter();
+  Hive.registerAdapter(TodoModelAdapter());
+  Hive.registerAdapter(FocusTypeAdapter());
+  Hive.registerAdapter(SessionLogAdapter());
+  Hive.registerAdapter(AppSettingsAdapter());
+  Hive.registerAdapter(TodoCategoryAdapter());
+  Hive.registerAdapter(TodoStatusAdapter());
 
-  // Register all adapters BEFORE opening any box
-  Hive.registerAdapter(TodoModelAdapter());      // typeId: 0
-  Hive.registerAdapter(FocusTypeAdapter());      // typeId: 1
-  Hive.registerAdapter(SessionLogAdapter());     // typeId: 2
-  Hive.registerAdapter(AppSettingsAdapter());    // typeId: 3
-  Hive.registerAdapter(TodoCategoryAdapter());   // typeId: 4
-  Hive.registerAdapter(TodoStatusAdapter());     // typeId: 5
-
-  // ── Schema migration guard ──────────────────────────────────────────────
-  // If schema version stored on disk differs from current, wipe todo box
-  // so Hive doesn't crash trying to read old int as TodoStatus.
+  // Schema migration guard
   final metaBox = await Hive.openBox<int>('_meta');
   final storedVersion = metaBox.get('schemaVersion', defaultValue: 0)!;
   if (storedVersion != _schemaVersion) {
@@ -57,6 +63,9 @@ Future<void> main() async {
   runApp(
     MultiBlocProvider(
       providers: [
+        BlocProvider(
+            create: (_) => AuthBloc(AuthService.instance)
+              ..add(const AuthStarted())),
         BlocProvider(create: (_) => TodoBloc(TodoLocalDataSource())),
         BlocProvider(create: (_) => FocusBloc(FocusLocalDataSource())),
         BlocProvider(
@@ -81,7 +90,7 @@ class MyApp extends StatelessWidget {
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Todo App',
+          title: 'TaskFlow',
           themeMode: settingsState.themeMode,
           theme: ThemeData(
             brightness: Brightness.light,
@@ -102,8 +111,35 @@ class MyApp extends StatelessWidget {
               surface: Color(0xFF0D1020),
             ),
           ),
-          home: const AppShell(),
+          home: const _Root(),
         );
+      },
+    );
+  }
+}
+
+// ─── Root — routes between Auth and AppShell ──────────────────────────────────
+
+class _Root extends StatelessWidget {
+  const _Root();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        // When user logs in, trigger a Firestore sync
+        if (state is AuthAuthenticated) {
+          context.read<TodoBloc>().add(const SyncFromFirestore());
+        }
+      },
+      builder: (context, state) {
+        if (state is AuthInitial || state is AuthLoading) {
+          return const SplashScreen();
+        }
+        if (state is AuthAuthenticated) {
+          return const AppShell();
+        }
+        return const AuthRouter();
       },
     );
   }
@@ -164,8 +200,7 @@ class _AppShellState extends State<AppShell> {
             final sel = states.contains(WidgetState.selected);
             return TextStyle(
               color: sel ? Colors.white : Colors.white60,
-              fontWeight:
-              sel ? FontWeight.w600 : FontWeight.normal,
+              fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
               fontSize: 12,
             );
           }),
@@ -186,8 +221,7 @@ class _AppShellState extends State<AppShell> {
             final sel = states.contains(WidgetState.selected);
             return TextStyle(
               color: sel ? darkIconSel : darkIconUnsel,
-              fontWeight:
-              sel ? FontWeight.w600 : FontWeight.normal,
+              fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
               fontSize: 12,
             );
           }),
